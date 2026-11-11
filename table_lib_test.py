@@ -636,5 +636,72 @@ class ReStructuredTextSyntaxTest(BaseTableTest):
         self.assert_table_equals(expected, formatted)
 
 
+class PandocSyntaxTest(BaseTableTest):
+
+    def setUp(self):
+        self.syntax = table_lib.pandoc_syntax()
+
+    def testAlignment(self):
+        unformatted = """\
++---+---+---+---+
+| Left | Right | Center | Default |
++:==+==:+:=:+===+
+| a | b | c | d |
++---+---+---+---+
+""".rstrip()
+
+        expected = """\
++------+-------+--------+---------+
+| Left | Right | Center | Default |
++:=====+======:+:======:+=========+
+| a    |     b |   c    | d       |
++------+-------+--------+---------+
+""".rstrip()
+
+        t = self.syntax.table_parser.parse_text(unformatted)
+        formatted = t.render()
+        self.assert_table_equals(expected, formatted)
+
+    def testHeaderlessAlignment(self):
+        unformatted = """\
++--:+:-:+
+| right | center |
++---+---+
+""".rstrip()
+
+        expected = """\
++------:+:------:+
+| right | center |
++-------+--------+
+""".rstrip()
+
+        t = self.syntax.table_parser.parse_text(unformatted)
+        formatted = t.render()
+        self.assert_table_equals(expected, formatted)
+
+    def testInsertSingleHlineKeepsAlignment(self):
+        unformatted = """\
++---+---+
+| Header one | Header two |
++==:+:=:+
+| a | b |
+| c | d |
+""".rstrip()
+
+        expected = """\
++------------+------------+
+| Header one | Header two |
++===========:+:==========:+
+|          a |     b      |
++------------+------------+
+|          c |     d      |
+""".rstrip()
+
+        t = self.syntax.table_parser.parse_text(unformatted)
+        self.syntax.table_driver.editor_insert_single_hline(t, tbase.TablePos(3, 0))
+        formatted = t.render()
+        self.assert_table_equals(expected, formatted)
+
+
 if __name__ == '__main__':
     unittest.main()
