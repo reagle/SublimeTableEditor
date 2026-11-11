@@ -97,9 +97,20 @@ class PandocAlignColumn(tbase.Column):
 class PandocTableParser(tborder.BorderTableParser):
 
     def create_row(self, table, line):
+        # Pandoc reads alignment only from the header separator (first '='
+        # row) or, without a header, from the top border; ignore other colons
         str_cols = line.str_cols()
         if any(':' in col for col in str_cols):
             for sep in '-=':
                 if self.columns_match_regex(str_cols, r"^\s*:?" + sep + r"+:?\s*$"):
-                    return PandocAlignRow(table, sep)
+                    if self.is_align_position(table, sep):
+                        return PandocAlignRow(table, sep)
+                    return tborder.SeparatorRow(table, sep)
         return tborder.BorderTableParser.create_row(self, table, line)
+
+    def is_align_position(self, table, sep):
+        if not table.rows:
+            return True
+        return sep == '=' and not any(
+            isinstance(r, tborder.SeparatorRow) and r.separator == '='
+            for r in table.rows)

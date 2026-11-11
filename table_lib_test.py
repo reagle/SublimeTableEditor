@@ -679,6 +679,54 @@ class PandocSyntaxTest(BaseTableTest):
         formatted = t.render()
         self.assert_table_equals(expected, formatted)
 
+    def testBodySeparatorColonsIgnored(self):
+        unformatted = """\
++---+---+
+| Header one | Header two |
++:==+==:+
+| a | b |
++---+--:+
+| c | d |
++---+---+
+""".rstrip()
+
+        expected = """\
++------------+------------+
+| Header one | Header two |
++:===========+===========:+
+| a          |          b |
++------------+------------+
+| c          |          d |
++------------+------------+
+""".rstrip()
+
+        t = self.syntax.table_parser.parse_text(unformatted)
+        formatted = t.render()
+        self.assert_table_equals(expected, formatted)
+
+    def testNonTopSingleSeparatorColonsIgnored(self):
+        unformatted = """\
++---+---+
+| Header one | Header two |
++==:+:=:+
+| a | b |
++:--+--:+
+| c | d |
+""".rstrip()
+
+        expected = """\
++------------+------------+
+| Header one | Header two |
++===========:+:==========:+
+|          a |     b      |
++------------+------------+
+|          c |     d      |
+""".rstrip()
+
+        t = self.syntax.table_parser.parse_text(unformatted)
+        formatted = t.render()
+        self.assert_table_equals(expected, formatted)
+
     def testInsertSingleHlineKeepsAlignment(self):
         unformatted = """\
 +---+---+
